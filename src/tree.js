@@ -15,44 +15,39 @@ function buildTree(array, start, end) {
 
 export default function Tree(array) {
   const sortedArr = mergeSort(array);
-  const root = buildTree(sortedArr, 0, array.length - 1);
+  const root = buildTree(sortedArr, 0, sortedArr.length - 1);
 
-  let curr = root;
-  function insert(value) {
-    if (curr.data === value) {
-      curr = root;
+  function insert(value, node = this.root) {
+    if (node.data === value) {
+      node = root;
       return;
     }
-    if (value < curr.data) {
-      if (curr.left == null) {
-        curr.left = Node(value);
-        curr = root;
+    if (value < node.data) {
+      if (node.left == null) {
+        node.left = Node(value);
         return;
       }
-      curr = curr.left;
-      insert(value);
+      insert(value, node.left);
     } else {
-      if (curr.right == null) {
-        curr.right = Node(value);
-        curr = root;
+      if (node.right == null) {
+        node.right = Node(value);
         return;
       }
-      curr = curr.right;
-      insert(value);
+      insert(value, node.right);
     }
   }
   let prev = root;
-  function remove(value) {
-    if (curr.data === value) {
-      if (curr.left === null && curr.right === null) {
-        if (curr.data > prev.data) {
+  function remove(value, node = this.root) {
+    if (node.data === value) {
+      if (node.left === null && node.right === null) {
+        if (node.data > prev.data) {
           prev.right = null;
         } else {
           prev.left = null;
         }
-      } else if (curr.left && curr.right) {
-        let closestValue = curr.right;
-        let prevClosestValue = curr;
+      } else if (node.left && node.right) {
+        let closestValue = node.right;
+        let prevClosestValue = node;
         while (closestValue.left !== null) {
           prevClosestValue = closestValue;
           closestValue = closestValue.left;
@@ -62,50 +57,45 @@ export default function Tree(array) {
         } else {
           prevClosestValue.left = null;
         }
-        if (curr === root) {
-          curr.data = closestValue.data;
+        if (node === root) {
+          node.data = closestValue.data;
           return;
         }
-        if (curr.data > prev.data) {
+        if (node.data > prev.data) {
           prev.right.data = closestValue.data;
         } else {
           prev.left.data = closestValue.data;
         }
-      } else if (curr.right) {
-        prev.left = curr.right;
+      } else if (node.right) {
+        prev.left = node.right;
       } else {
-        prev.left = curr.left;
+        prev.left = node.left;
       }
-      curr = root;
       return;
     }
-    if (value < curr.data) {
-      prev = curr;
-      curr = curr.left;
-      remove(value);
+    if (value < node.data) {
+      prev = node;
+      remove(value, node.left);
     } else {
-      prev = curr;
-      curr = curr.right;
-      remove(value);
+      prev = node;
+      remove(value, node.right);
     }
   }
 
-  function find(value) {
-    if (curr === null) {
+  function find(value, node = this.root) {
+    if (node === null) {
       return "This data doesn`t exist in BT";
     }
-    if (curr.data === value) {
-      const answer = curr;
+    if (node.data === value) {
+      const answer = node;
       return answer;
     }
-    if (value < curr.data) {
-      curr = curr.left;
-      return find(value);
+    if (value < node.data) {
+      return find(value, node.left);
     }
-    curr = curr.right;
-    return find(value);
+    return find(value, node.right);
   }
-  function levelOrder(callback = null) {
+  function levelOrder(callback = null, startNode = this.root) {
     if (!this.root) return;
 
     const result = [];
@@ -117,7 +107,7 @@ export default function Tree(array) {
     }
 
     const queue = [];
-    queue.push(this.root);
+    queue.push(startNode);
 
     while (queue.length > 0) {
       const node = queue.shift();
@@ -199,6 +189,57 @@ export default function Tree(array) {
     return result;
   }
 
+  function height(node) {
+    if (node == null) return 0;
+    {
+      const lHight = height(node.left);
+      const rHight = height(node.right);
+      if (lHight > rHight) {
+        return lHight + 1;
+      }
+      return rHight + 1;
+    }
+  }
+
+  function depth(node) {
+    let dep = 0;
+
+    const q = [];
+
+    q.push(this.root);
+    q.push(null);
+    let temp = this.root;
+    while (temp !== node) {
+      temp = q.shift();
+
+      if (temp == null) dep += 1;
+
+      if (temp != null) {
+        if (temp.left) q.push(temp.left);
+
+        if (temp.right) q.push(temp.right);
+      } else if (q.length > 0) q.push(null);
+    }
+    return dep;
+  }
+
+  function isBalanced(node = this.root) {
+    if (node == null) {
+      return true;
+    }
+    const left = height(node.left);
+    const right = height(node.right);
+    if (Math.abs(left - right) > 1) {
+      return false;
+    }
+    return isBalanced(node.left) && isBalanced(node.right);
+  }
+
+  function rebalance() {
+    const newArray = this.inOrder();
+    this.root = buildTree(newArray, 0, newArray.length - 1);
+  }
+
   return {
     root,
     insert,
@@ -208,5 +249,9 @@ export default function Tree(array) {
     preOrder,
     inOrder,
     postOrder,
+    height,
+    depth,
+    isBalanced,
+    rebalance,
   };
 }
